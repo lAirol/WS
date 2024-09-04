@@ -1,0 +1,96 @@
+.body{
+    position: relative;
+}
+#output{
+    width: 1900px;
+    height: 1080px;
+}
+.round {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    position: absolute;
+    animation: pulse 1s infinite alternate;
+    pointer-events: none;
+}
+
+.square {
+    width: 30px;
+    height: 30px;
+    background-color: red;
+    position: absolute;
+    pointer-events: none;
+}
+
+.fade-out1 {
+    animation: fadeOut1 5s ease forwards;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(3);
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeOut1 {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.options{
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    padding: 10px;
+    background-color: #f0f0f0;
+    right: 100px;
+    z-index: 100;
+}
+
+#options_img {
+    width: 30px;
+    height: 30px;
+}
+
+
+.options_main{
+    display: none;
+}
+
+.options_main.active{
+    display: flex;
+    justify-content: center;
+}
+
+.options_color{
+    background-color: #f0f0f0;
+    padding: 10px;
+}
+
+.color_picker_wrapper{
+    display: flex;
+    justify-content: space-between;
+}
+
+.display{
+    width: 100%;
+    height: 20px;
+    border-radius: 10px;
+}
+
