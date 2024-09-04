@@ -1,22 +1,36 @@
 package main
 
 import (
+	"WS/system/db"
+	"WS/system/handlers"
 	"fmt"
-	"net/http"
-
 	"github.com/gorilla/websocket"
+	_ "github.com/lib/pq"
+	"net/http"
+	"strings"
 )
 
 var upgrader = websocket.Upgrader{}
 
 func main() {
-	http.HandleFunc("/ws", handleConnections)
-	http.HandleFunc("/", handleIndex)
+	// Инициализация базы данных
+	db.InitDB()
 
-	http.Handle("/public/", http.StripPrefix("/public/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./public/"+r.URL.Path)
-		w.Header().Set("Cache-Control", "max-age=300") // Кэширование на 5 мин
-	})))
+	// Маршрутизация
+	http.HandleFunc("/ws", handlers.HandleConnections)
+	http.HandleFunc("/index", handlers.HandleIndex)
+
+	// Обработка статических файлов
+	staticHandler := http.FileServer(http.Dir("./public/"))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if isStaticFileRequest(r) {
+			// Запрос на статический файл
+			cacheControlMiddleware(nil, staticHandler).ServeHTTP(w, r)
+		} else {
+			// Запрос на динамическую обработку
+			handleDynamicRoutes(w, r)
+		}
+	})
 
 	fmt.Println("Сервер запущен на http://localhost:8080/")
 	err := http.ListenAndServe(":8080", nil)
@@ -25,32 +39,46 @@ func main() {
 	}
 }
 
-func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// Проверяем, что запрос действительно на WebSocket
-	ws, err := upgrader.Upgrade(w, r, nil)
+func cacheControlMiddleware(next http.Handler, staticHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/index", http.StatusMovedPermanently)
+			return
+		}
+
+		// Устанавливаем заголовок Cache-Control для кэширования на 5 минут
+		w.Header().Set("Cache-Control", "public, max-age=300")
+
+		// Вызываем соответствующий обработчик
+		if isStaticFileRequest(r) {
+			staticHandler.ServeHTTP(w, r)
+		} else {
+			next.ServeHTTP(w, r)
+		}
+	})
+}
+
+func handleDynamicRoutes(w http.ResponseWriter, r *http.Request) {
+	// Проверка наличия URL в базе данных
+	url := r.URL.Path
+	exists, err := db.CheckUrlExists(url)
 	if err != nil {
-		fmt.Println(err)
+		// Обработка ошибки при проверке в базе данных
+		http.Error(w, "Произошла ошибка", http.StatusInternalServerError)
 		return
 	}
-	defer ws.Close()
 
-	// Здесь будет ваш основной цикл обработки сообщений
-	for {
-		// Читаем сообщение от клиента
-		_, msg, err := ws.ReadMessage()
-		if err != nil {
-			break
-		}
-		fmt.Println("Получено сообщение:", string(msg))
-
-		// Отправляем ответ клиенту
-		err = ws.WriteMessage(websocket.TextMessage, msg)
-		if err != nil {
-			break
-		}
+	if exists {
+		// Если URL найден в базе, то обрабатываем его
+		// Например, вызываем соответствующую функцию для генерации страницы
+		//handlers.HandleDynamicPage(w, r, url)
+		fmt.Println("123")
+	} else {
+		// Если URL не найден, то возвращаем 404
+		http.NotFound(w, r)
 	}
 }
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./public/html/index.html")
+func isStaticFileRequest(r *http.Request) bool {
+	return strings.Contains(r.URL.Path, ".")
 }
