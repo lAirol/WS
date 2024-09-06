@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>web go</title>
+    <link href="/css/main.css" rel="stylesheet"  type="text/css">
+    <script type="text/javascript" src="/js/Elements.js"></script>
+    <script type="text/javascript" src="/js/Options.js"></script>
+</head>
+<body class="body">
+<div id="options" class="options">
+
+</div>
+<div id="output"></div>
+
+<script>
+    const socket = new WebSocket('ws://localhost:8080/ws');
+    socket.onopen = () => {
+        console.log('Connected to the WebSocket server');
+    };
+
+
+    let back_color;
+    let options;
+    window.addEventListener("load", () => {
+        options = new Options();
+
+        window.addEventListener("mousemove", (event) => {
+            if(event.target.id === "output"){
+                let message_obj = {
+                    offsetX: event.offsetX,
+                    offsetY: event.offsetY,
+                    type: "move",
+                    backgroundColor: options.back_color
+                };
+                socket.send(JSON.stringify(message_obj));
+                Elements.createRoundElement(message_obj,options.back_color);
+            }
+        });
+
+        window.addEventListener("click", (event) => {
+            let message_obj = {
+                offsetX: event.offsetX,
+                offsetY: event.offsetY,
+                type: "click"
+            };
+            socket.send(JSON.stringify(message_obj));
+            Elements.createSquareElement(message_obj);
+        });
+        socket.onmessage = (event) => {
+            let data = event.data;
+            try {
+                data = JSON.parse(data);
+            } catch (ex) {}
+
+            if (data.type === "move") {
+                Elements.createRoundElement(data, data.backgroundColor);
+            } else {
+                Elements.createSquareElement(data);
+            }
+        };
+    })
+
+    function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value;
+        socket.send(message);
+        messageInput.value = '';
+    }
+</script>
+</body>
+</html>
