@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"WS/internal/extentions/random"
 	"WS/internal/modules/users"
 	"log"
 	"net/http"
@@ -71,9 +72,9 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Client := &users.UserClient{Conn: ws, Logged: false}
+	defaultClient := &users.UserClient{Client: &users.Client{ID: random.GenerateUniqUserId(), Conn: ws, Logged: false}}
 	mu.Lock()
-	users.CurrClients.UsersClients[ws] = Client
+	users.CurrClients.UsersClients[ws] = defaultClient
 	mu.Unlock()
 
 	go func() {
@@ -94,7 +95,7 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			s := Sender{
-				IClient: Client,
+				IClient: defaultClient,
 				msg:     msg,
 			}
 			broadcast <- s
@@ -110,7 +111,7 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	adminClient := &users.AdminClient{Conn: ws, Logged: true}
+	adminClient := &users.AdminClient{Client: &users.Client{ID: random.GenerateUniqUserId(), Conn: ws, Logged: true}}
 	mu.Lock()
 	users.CurrClients.AdminsClients[ws] = adminClient
 	mu.Unlock()

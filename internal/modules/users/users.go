@@ -9,11 +9,15 @@ type IClient interface {
 	IsLoggedIn() bool
 }
 
-type UserClient struct {
+type Client struct {
 	ID     int
 	Conn   *websocket.Conn
 	Mu     sync.Mutex
 	Logged bool
+}
+
+type UserClient struct {
+	*Client
 }
 
 func (u *UserClient) IsLoggedIn() bool {
@@ -21,11 +25,8 @@ func (u *UserClient) IsLoggedIn() bool {
 }
 
 type AdminClient struct {
-	ID              int
-	Conn            *websocket.Conn
-	Mu              sync.Mutex
-	Logged          bool
-	someAdminFields string
+	*Client
+	someAdminFieldsLikeRules string
 }
 
 func (a *AdminClient) IsLoggedIn() bool {
