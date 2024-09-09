@@ -1,12 +1,10 @@
 package main
 
 import (
-	"WS/system/db"
-	"WS/system/route"
+	"WS/internal/db"
+	"WS/internal/route"
 	"fmt"
 	"net/http"
-
-	_ "github.com/lib/pq"
 )
 
 func main() {
