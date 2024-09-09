@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"WS/internal/modules/users"
 	"log"
 	"net/http"
 	"sync"
@@ -8,38 +9,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type client interface {
-	isLoggedIn() bool
-}
-
-type userClient struct {
-	conn   *websocket.Conn
-	mu     sync.Mutex
-	logged bool
-}
-
-func (u *userClient) isLoggedIn() bool {
-	return u.logged
-}
-
-type Clients struct {
-	UsersClients  map[*websocket.Conn]*userClient
-	AdminsClients map[*websocket.Conn]*adminClient
-}
-
-type adminClient struct {
-	conn            *websocket.Conn
-	mu              sync.Mutex
-	logged          bool
-	someAdminFields string
-}
-
-func (a *adminClient) isLoggedIn() bool {
-	return a.logged
-}
-
 type Sender struct {
-	client
+	users.IClient
 	msg []byte
 }
 
@@ -47,10 +18,6 @@ var (
 	upgrader  websocket.Upgrader
 	broadcast = make(chan Sender)
 	mu        sync.Mutex
-	clients   = Clients{
-		UsersClients:  make(map[*websocket.Conn]*userClient),
-		AdminsClients: make(map[*websocket.Conn]*adminClient),
-	}
 )
 
 func init() {
@@ -65,31 +32,31 @@ func broadcastMessages() {
 	for {
 		sender := <-broadcast
 		mu.Lock()
-		if !sender.client.isLoggedIn() {
-			for _, userClient := range clients.UsersClients {
-				userClient.mu.Lock()
-				if userClient.conn != nil && userClient != sender.client {
-					err := userClient.conn.WriteMessage(websocket.TextMessage, sender.msg)
+		if !sender.IClient.IsLoggedIn() {
+			for _, userClient := range users.CurrClients.UsersClients {
+				userClient.Mu.Lock()
+				if userClient.Conn != nil && userClient != sender.IClient {
+					err := userClient.Conn.WriteMessage(websocket.TextMessage, sender.msg)
 					if err != nil {
 						log.Printf("error sending message: %v", err)
-						userClient.conn.Close()
-						delete(clients.UsersClients, userClient.conn)
+						userClient.Conn.Close()
+						delete(users.CurrClients.UsersClients, userClient.Conn)
 					}
 				}
-				userClient.mu.Unlock()
+				userClient.Mu.Unlock()
 			}
 		} else {
-			for _, adminClient := range clients.AdminsClients {
-				adminClient.mu.Lock()
-				if adminClient.conn != nil && adminClient != sender.client {
-					err := adminClient.conn.WriteMessage(websocket.TextMessage, sender.msg)
+			for _, adminClient := range users.CurrClients.AdminsClients {
+				adminClient.Mu.Lock()
+				if adminClient.Conn != nil && adminClient != sender.IClient {
+					err := adminClient.Conn.WriteMessage(websocket.TextMessage, sender.msg)
 					if err != nil {
 						log.Printf("error sending message: %v", err)
-						adminClient.conn.Close()
-						delete(clients.AdminsClients, adminClient.conn)
+						adminClient.Conn.Close()
+						delete(users.CurrClients.AdminsClients, adminClient.Conn)
 					}
 				}
-				adminClient.mu.Unlock()
+				adminClient.Mu.Unlock()
 			}
 		}
 
@@ -104,16 +71,16 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &userClient{conn: ws, logged: false}
+	Client := &users.UserClient{Conn: ws, Logged: false}
 	mu.Lock()
-	clients.UsersClients[ws] = client
+	users.CurrClients.UsersClients[ws] = Client
 	mu.Unlock()
 
 	go func() {
 		defer func() {
 			ws.Close()
 			mu.Lock()
-			delete(clients.UsersClients, ws)
+			delete(users.CurrClients.UsersClients, ws)
 			mu.Unlock()
 		}()
 		for {
@@ -127,8 +94,8 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			s := Sender{
-				client: client,
-				msg:    msg,
+				IClient: Client,
+				msg:     msg,
 			}
 			broadcast <- s
 		}
@@ -143,16 +110,16 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	adminClient := &adminClient{conn: ws, logged: true}
+	adminClient := &users.AdminClient{Conn: ws, Logged: true}
 	mu.Lock()
-	clients.AdminsClients[ws] = adminClient
+	users.CurrClients.AdminsClients[ws] = adminClient
 	mu.Unlock()
 
 	go func() {
 		defer func() {
 			ws.Close()
 			mu.Lock()
-			delete(clients.AdminsClients, ws)
+			delete(users.CurrClients.AdminsClients, ws)
 			mu.Unlock()
 		}()
 		for {
@@ -166,8 +133,8 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			s := Sender{
-				client: adminClient,
-				msg:    msg,
+				IClient: adminClient,
+				msg:     msg,
 			}
 			broadcast <- s
 		}

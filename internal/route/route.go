@@ -4,6 +4,7 @@ import (
 	"WS/internal/handlers"
 	"WS/internal/modules/admin"
 	"WS/internal/modules/news"
+	"WS/internal/modules/users"
 	"net/http"
 	"strings"
 )
@@ -12,6 +13,7 @@ func InitRoute() {
 	defRoutes()
 	news.RegisterRoutes()
 	admin.RegisterRoutes()
+	users.RegisterRoutes()
 	reqType()
 }
 

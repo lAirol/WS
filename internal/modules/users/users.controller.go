@@ -1,31 +1,34 @@
 package users
 
 import (
-	"github.com/gorilla/websocket"
-	"sync"
+	"fmt"
+	"net/http"
 )
 
-type Client interface {
-	IsLoggedIn() bool
+type UsersController struct {
+	Request *http.Request
+	Writer  http.ResponseWriter
 }
 
-type UserClient struct {
-	conn   *websocket.Conn
-	mu     sync.Mutex
-	logged bool
+func NewUsersController(w http.ResponseWriter, r *http.Request) *UsersController {
+	return &UsersController{
+		Request: r,
+		Writer:  w,
+	}
 }
 
-func (u *UserClient) IsLoggedIn() bool {
-	return u.logged
+func (*UsersController) GetUsers() {
+	fmt.Print(CurrClients)
 }
 
-type AdminClient struct {
-	conn            *websocket.Conn
-	mu              sync.Mutex
-	logged          bool
-	someAdminFields string
+func (*UsersController) CountUsers() {
+
 }
 
-func (a *AdminClient) IsLoggedIn() bool {
-	return a.logged
+func (*UsersController) GetAdminUsers() {
+
+}
+
+func (*UsersController) GetDefaultUsers() {
+
 }
