@@ -33,7 +33,7 @@ func broadcastMessages() {
 	for {
 		sender := <-broadcast
 		mu.Lock()
-		if !sender.IClient.IsLoggedIn() {
+		if !sender.IClient.GetType() {
 			for _, userClient := range users.CurrClients.UsersClients {
 				userClient.Mu.Lock()
 				if userClient.Conn != nil && userClient != sender.IClient {
@@ -54,7 +54,7 @@ func broadcastMessages() {
 					if err != nil {
 						log.Printf("error sending message: %v", err)
 						adminClient.Conn.Close()
-						delete(users.CurrClients.AdminsClients, adminClient.Conn)
+						delete(users.CurrClients.AdminsClients, adminClient.ID)
 					}
 				}
 				adminClient.Mu.Unlock()
@@ -72,7 +72,7 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defaultClient := &users.UserClient{Client: &users.Client{ID: random.GenerateUniqUserId(), Conn: ws, Logged: false}}
+	defaultClient := &users.UserClient{Client: &users.Client{ID: random.GenerateUUID(), Conn: ws, Type: false}}
 	mu.Lock()
 	users.CurrClients.UsersClients[ws] = defaultClient
 	mu.Unlock()
@@ -105,22 +105,26 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 
 func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 	// тут должны быть проверка на то, залогинен пользователь или нет
+	admin, err := users.GetLoggedUser(r)
+	if err != nil {
+		return
+	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("error upgrading connection: %v", err)
 		return
 	}
 
-	adminClient := &users.AdminClient{Client: &users.Client{ID: random.GenerateUniqUserId(), Conn: ws, Logged: true}}
+	admin.Mu = mu
+	admin.Conn = ws
 	mu.Lock()
-	users.CurrClients.AdminsClients[ws] = adminClient
 	mu.Unlock()
 
 	go func() {
 		defer func() {
 			ws.Close()
 			mu.Lock()
-			delete(users.CurrClients.AdminsClients, ws)
+			delete(users.CurrClients.AdminsClients, admin.ID)
 			mu.Unlock()
 		}()
 		for {
@@ -134,7 +138,7 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			s := Sender{
-				IClient: adminClient,
+				IClient: users.CurrClients.AdminsClients[admin.ID],
 				msg:     msg,
 			}
 			broadcast <- s

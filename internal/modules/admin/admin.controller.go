@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"WS/internal/extentions/cookie"
+	"WS/internal/modules/users"
 	"html/template"
 	"net/http"
 )
@@ -17,7 +19,7 @@ func NewAdminController(w http.ResponseWriter, r *http.Request) *AdminController
 	}
 }
 
-func (ac *AdminController) Load() {
+func (ac *AdminController) Load(adminClient *users.AdminClient) {
 	tmpl, err := template.ParseFiles("./internal/views/admin/qwe.html", "./public/html/chat.html")
 	if err != nil {
 		http.Error(ac.Writer, "Unable to load template", http.StatusInternalServerError)
@@ -25,9 +27,10 @@ func (ac *AdminController) Load() {
 	}
 
 	data := map[string]interface{}{
-		"Title": "Admin Page",
-		// Add more data here as needed
+		//"clientId": clientId,
 	}
+
+	http.SetCookie(ac.Writer, cookie.CreateCookie("Uid", adminClient.ID))
 
 	err = tmpl.Execute(ac.Writer, data)
 	if err != nil {

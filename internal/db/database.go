@@ -6,19 +6,19 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var db *sql.DB
+var DB *sql.DB
 
 func InitDB() {
 	connStr := "user=root password=root dbname=test sslmode=disable"
 	var err error
-	db, err = sql.Open("postgres", connStr)
+	DB, err = sql.Open("postgres", connStr)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func FindUrlExists(url string) (*tables2.Structure, error) {
-	row := db.QueryRow("SELECT * from find_unicque_url($1)", url)
+	row := DB.QueryRow("SELECT * from find_unicque_url($1)", url)
 
 	var s tables2.Structure
 	err := row.Scan(&s.ID, &s.Module, &s.Template, &s.URL, &s.Name, &s.Active)
@@ -34,7 +34,7 @@ func FindUrlExists(url string) (*tables2.Structure, error) {
 
 func LoadModuleInfo(id int) (string, error) {
 	var controllerName string
-	err := db.QueryRow("SELECT * FROM get_module_by_id($1)", id).Scan(&controllerName)
+	err := DB.QueryRow("SELECT * FROM get_module_by_id($1)", id).Scan(&controllerName)
 	if err != nil {
 		return "", err
 	}
@@ -42,7 +42,7 @@ func LoadModuleInfo(id int) (string, error) {
 }
 
 func LoadModulesFromDB() ([]tables2.Module, error) {
-	rows, err := db.Query("SELECT * FROM modules")
+	rows, err := DB.Query("SELECT * FROM modules")
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +59,16 @@ func LoadModulesFromDB() ([]tables2.Module, error) {
 	return modules, nil
 }
 
+func GetHashByUser(user string) (string, error) {
+	var password string
+	err := DB.QueryRow("SELECT password FROM users WHERE login like $1", user).Scan(&password)
+	return password, err
+}
+
 func GetDB() *sql.DB {
-	if db == nil {
-		// Initialize db connection only once
+	if DB == nil {
+		// Initialize DB connection only once
 		InitDB()
 	}
-	return db
+	return DB
 }

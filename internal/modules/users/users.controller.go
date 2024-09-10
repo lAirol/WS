@@ -18,7 +18,7 @@ func NewUsersController(w http.ResponseWriter, r *http.Request) *UsersController
 }
 
 func (*UsersController) GetUsers() {
-	fmt.Print(CurrClients)
+	fmt.Print(CurrClients.AdminsClients)
 }
 
 func (*UsersController) CountUsers() {

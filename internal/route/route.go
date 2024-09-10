@@ -21,12 +21,20 @@ func defRoutes() {
 	http.HandleFunc("/ws", handlers.HandleConnections)
 	http.HandleFunc("/wsadmin", handlers.HandleAdminConnections)
 	http.HandleFunc("/index", handlers.HandleIndex)
+	http.HandleFunc("/admin", handlers.HandleAdminLogin)
 }
 
 func reqType() {
 	staticHandler := http.FileServer(http.Dir("./public/"))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if isStaticFileRequest(r) {
+			//проверка есть ли в пути admin
+			//if strings.Contains(r.URL.Path, "/admin/") {
+			//	// Если пользователь не авторизован, возвращаем false
+			//	if !isUserAuthorized() {
+			//		return false
+			//	}
+			//}
 			// Запрос на статический файл
 			cacheControlMiddleware(nil, staticHandler).ServeHTTP(w, r)
 		} else {

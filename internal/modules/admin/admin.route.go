@@ -1,6 +1,8 @@
 package admin
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func registerRoute(path string, handler func(*AdminController)) {
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
@@ -11,5 +13,5 @@ func registerRoute(path string, handler func(*AdminController)) {
 
 func RegisterRoutes() {
 	//registerRoute("/admin/tree", (*AdminController).Load)
-	registerRoute("/admin", (*AdminController).Load)
+	//registerRoute("/admin1", (*AdminController).Load)
 }
