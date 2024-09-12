@@ -10,8 +10,8 @@ func registerRoute(path string, handler func(*NewsController)) {
 }
 
 func RegisterRoutes() {
-	registerRoute("/news/config", (*NewsController).NewsConfig)
-	registerRoute("/news/reply", (*NewsController).NewsReply)
-	registerRoute("/news/identity", (*NewsController).NewsIdentity)
-	registerRoute("/news/core", (*NewsController).NewsCore)
+	registerRoute("/admin_news/config", (*NewsController).NewsConfig)
+	registerRoute("/admin_news/reply", (*NewsController).NewsReply)
+	registerRoute("/admin_news/identity", (*NewsController).NewsIdentity)
+	registerRoute("/admin_news/core", (*NewsController).NewsCore)
 }

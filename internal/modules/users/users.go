@@ -1,6 +1,7 @@
 package users
 
 import (
+	"WS/internal/extentions/cookie"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"sync"
@@ -36,8 +37,8 @@ func (a *AdminClient) GetType() bool {
 }
 
 type Clients struct {
-	UsersClients  map[*websocket.Conn]*UserClient
-	AdminsClients map[string]*AdminClient
+	UsersClients  map[*websocket.Conn]*UserClient `json:"user_clients"`
+	AdminsClients map[string]*AdminClient         `json:"admin_clients"`
 }
 
 var CurrClients = Clients{
@@ -45,11 +46,16 @@ var CurrClients = Clients{
 	AdminsClients: make(map[string]*AdminClient),
 }
 
-func GetLoggedUser(r *http.Request) (*AdminClient, error) {
-	cookie, err := r.Cookie("Uid")
-	Uid := cookie.Value
-	if err != nil {
-		return nil, err
+func GetLoggedUser(r *http.Request) *AdminClient {
+	Uid := cookie.GetIdCookie(r)
+	uAgent := cookie.GetUserAgentCookie(r)
+	if adminExists(Uid) && CurrClients.AdminsClients[Uid].UserAgent == uAgent || uAgent != "" {
+		return CurrClients.AdminsClients[Uid]
 	}
-	return CurrClients.AdminsClients[Uid], nil
+	return nil
+}
+
+func adminExists(Uid string) bool {
+	_, ok := CurrClients.AdminsClients[Uid]
+	return ok
 }

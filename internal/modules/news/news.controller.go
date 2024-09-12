@@ -1,19 +1,21 @@
 package news
 
 import (
+	"WS/internal/modules"
 	"fmt"
 	"net/http"
 )
 
 type NewsController struct {
-	Request *http.Request
-	Writer  http.ResponseWriter
+	modules.Controller
 }
 
 func NewNewsController(w http.ResponseWriter, r *http.Request) *NewsController {
 	return &NewsController{
-		Request: r,
-		Writer:  w,
+		modules.Controller{
+			Request: r,
+			Writer:  w,
+		},
 	}
 }
 

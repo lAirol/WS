@@ -105,8 +105,8 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 
 func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 	// тут должны быть проверка на то, залогинен пользователь или нет
-	admin, err := users.GetLoggedUser(r)
-	if err != nil {
+	admin := users.GetLoggedUser(r)
+	if admin == nil {
 		return
 	}
 	ws, err := upgrader.Upgrade(w, r, nil)

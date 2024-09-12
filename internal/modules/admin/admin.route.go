@@ -6,8 +6,8 @@ import (
 
 func registerRoute(path string, handler func(*AdminController)) {
 	http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-		nc := NewAdminController(w, r)
-		handler(nc)
+		//nc := NewAdminController(w, r)
+		//handler(nc)
 	})
 }
 

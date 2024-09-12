@@ -1,34 +1,40 @@
 package users
 
 import (
-	"fmt"
+	"WS/internal/modules/response"
 	"net/http"
 )
 
-type UsersController struct {
+type AdminController struct {
 	Request *http.Request
 	Writer  http.ResponseWriter
+	Admin   AdminClient
 }
 
-func NewUsersController(w http.ResponseWriter, r *http.Request) *UsersController {
-	return &UsersController{
+func NewAdminController(w http.ResponseWriter, r *http.Request, admin *AdminClient) *AdminController {
+	return &AdminController{
 		Request: r,
 		Writer:  w,
+		Admin:   *admin,
 	}
 }
 
-func (*UsersController) GetUsers() {
-	fmt.Print(CurrClients.AdminsClients)
+func (ac *AdminController) CreateJSONResponse(data interface{}) {
+	response.NewJSONResponse(ac.Writer, response.CreateResponse(data))
 }
 
-func (*UsersController) CountUsers() {
-
+func (ac *AdminController) GetUsers() {
+	ac.CreateJSONResponse(map[string]interface{}{"clients": len(CurrClients.UsersClients) + len(CurrClients.AdminsClients)})
 }
 
-func (*UsersController) GetAdminUsers() {
-
+func (ac *AdminController) CountUsers() {
+	ac.CreateJSONResponse(map[string]interface{}{"clients": len(CurrClients.UsersClients)})
 }
 
-func (*UsersController) GetDefaultUsers() {
+func (ac *AdminController) CountAdminUsers() {
+	ac.CreateJSONResponse(map[string]interface{}{"clients": len(CurrClients.AdminsClients)})
+}
 
+func (ac *AdminController) GetAdminUsers() {
+	ac.CreateJSONResponse(CurrClients.AdminsClients)
 }

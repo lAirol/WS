@@ -3,8 +3,6 @@ package handlers
 import (
 	"WS/internal/db"
 	"WS/internal/db/tables"
-	"WS/internal/extentions/random"
-	"WS/internal/modules/admin"
 	"WS/internal/modules/login"
 	"WS/internal/modules/users"
 	"fmt"
@@ -12,27 +10,32 @@ import (
 )
 
 func HandleIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./public/html/index.html")
+	http.ServeFile(w, r, "./internal/view/index.html")
 }
 
 func HandleAdminLogin(w http.ResponseWriter, r *http.Request) {
+	data := make(map[string]interface{})
 	if r.Method == http.MethodGet {
-		login.Load(w, r)
+		if users.GetLoggedUser(r) != nil {
+			login.LoadAdminPanel(w, r)
+		} else {
+			login.Load(w, r, data)
+		}
 	} else {
 		username := r.PostFormValue("username")
 		hash, err := db.GetHashByUser(username)
+
 		if err != nil {
-
-		}
-		res := login.CheckPasswordHash(r.PostFormValue("password"), hash)
-		if res == false {
-
+			data["username_not_found"] = "Пользователь не найден"
+			//тут можно начинать блокировать по ip
+			login.Load(w, r, data)
+			return
+		} else if !login.CheckPasswordHash(r.PostFormValue("password"), hash) {
+			//тут можно начинать блокировать по юзеру
+			data["wrong_password"] = "Неверно введён пароль"
+			login.Load(w, r, data)
 		} else {
-			cId := random.GenerateUUID()
-			adminClient := &users.AdminClient{Client: &users.Client{ID: cId, Conn: nil, Type: true}, UserAgent: r.Header.Get("User-Agent")}
-			users.CurrClients.AdminsClients[cId] = adminClient
-			ac := admin.NewAdminController(w, r)
-			ac.Load(adminClient)
+			login.LoadAdminPanel(w, r)
 		}
 	}
 }

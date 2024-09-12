@@ -20,7 +20,7 @@ func NewAdminController(w http.ResponseWriter, r *http.Request) *AdminController
 }
 
 func (ac *AdminController) Load(adminClient *users.AdminClient) {
-	tmpl, err := template.ParseFiles("./internal/views/admin/qwe.html", "./public/html/chat.html")
+	tmpl, err := template.ParseFiles("./internal/views/admin/qwe.html", "./internal/views/admin/chat.html")
 	if err != nil {
 		http.Error(ac.Writer, "Unable to load template", http.StatusInternalServerError)
 		return

@@ -128,6 +128,11 @@ input:focus :-ms-input-placeholder {
 	z-index: -1;
 }
 
+.error-message{
+    text-align: center;
+    color: red;
+}
+
 @-webkit-keyframes hue-rotate {
 	from {
 		-webkit-filter: grayscale(30%) hue-rotate(0deg);
@@ -149,6 +154,12 @@ input:focus :-ms-input-placeholder {
 </head>
 <body translate="no">
 <form action method="post" class="login-form">
+    {{ if .username_not_found }}
+        <p class="error-message">{{ .username_not_found }}</p>
+    {{ end }}
+    {{ if .wrong_password }}
+        <p class="error-message">{{ .wrong_password }}</p>
+    {{ end }}
     <p class="login-text">
     <span class="fa-stack fa-lg">
       <i class="fa fa-circle fa-stack-2x"></i>
