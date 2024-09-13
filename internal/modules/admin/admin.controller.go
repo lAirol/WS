@@ -40,3 +40,8 @@ func (ac *AdminPageController) Load() {
 		http.Error(ac.Writer, "Unable to render template", http.StatusInternalServerError)
 	}
 }
+
+func (ac *AdminPageController) CreateModule() {
+	//получить все модули из бд, всё
+
+}
