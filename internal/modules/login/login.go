@@ -27,13 +27,13 @@ func Load(w http.ResponseWriter, r *http.Request, data map[string]interface{}) {
 
 func LoadAdminPanel(w http.ResponseWriter, r *http.Request) {
 	if users.GetCurrUser(r) != nil {
-		admin.NewAdminController(w, r).Load(users.GetCurrUser(r))
+		admin.NewAdminController(w, r, users.GetCurrUser(r)).Load()
 	} else {
 		cId := random.GenerateUUID()
 		adminClient := &users.AdminClient{Client: &users.Client{ID: cId, Conn: nil, Type: true, Ip: r.RemoteAddr}, UserAgent: cookie.GetUserAgentCookie(r)}
 		users.CurrClients.AdminsClients[cId] = adminClient
-		ac := admin.NewAdminController(w, r)
-		ac.Load(adminClient)
+		ac := admin.NewAdminController(w, r, users.GetCurrUser(r))
+		ac.Load()
 	}
 }
 
