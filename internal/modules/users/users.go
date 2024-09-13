@@ -16,6 +16,7 @@ type Client struct {
 	Conn *websocket.Conn
 	Mu   sync.Mutex
 	Type bool //false - юзер true - человечина с доступом к админке
+	Ip   string
 }
 
 type UserClient struct {
@@ -46,7 +47,7 @@ var CurrClients = Clients{
 	AdminsClients: make(map[string]*AdminClient),
 }
 
-func GetLoggedUser(r *http.Request) *AdminClient {
+func GetCurrUser(r *http.Request) *AdminClient {
 	Uid := cookie.GetIdCookie(r)
 	uAgent := cookie.GetUserAgentCookie(r)
 	if adminExists(Uid) && CurrClients.AdminsClients[Uid].UserAgent == uAgent || uAgent != "" {

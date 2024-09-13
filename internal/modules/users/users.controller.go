@@ -5,36 +5,36 @@ import (
 	"net/http"
 )
 
-type AdminController struct {
+type AdminUsersController struct {
 	Request *http.Request
 	Writer  http.ResponseWriter
 	Admin   AdminClient
 }
 
-func NewAdminController(w http.ResponseWriter, r *http.Request, admin *AdminClient) *AdminController {
-	return &AdminController{
+func NewAdminUsersController(w http.ResponseWriter, r *http.Request, admin *AdminClient) *AdminUsersController {
+	return &AdminUsersController{
 		Request: r,
 		Writer:  w,
 		Admin:   *admin,
 	}
 }
 
-func (ac *AdminController) CreateJSONResponse(data interface{}) {
+func (ac *AdminUsersController) CreateJSONResponse(data interface{}) {
 	response.NewJSONResponse(ac.Writer, response.CreateResponse(data))
 }
 
-func (ac *AdminController) GetUsers() {
+func (ac *AdminUsersController) GetUsers() {
 	ac.CreateJSONResponse(map[string]interface{}{"clients": len(CurrClients.UsersClients) + len(CurrClients.AdminsClients)})
 }
 
-func (ac *AdminController) CountUsers() {
+func (ac *AdminUsersController) CountUsers() {
 	ac.CreateJSONResponse(map[string]interface{}{"clients": len(CurrClients.UsersClients)})
 }
 
-func (ac *AdminController) CountAdminUsers() {
+func (ac *AdminUsersController) CountAdminUsers() {
 	ac.CreateJSONResponse(map[string]interface{}{"clients": len(CurrClients.AdminsClients)})
 }
 
-func (ac *AdminController) GetAdminUsers() {
+func (ac *AdminUsersController) GetAdminUsers() {
 	ac.CreateJSONResponse(CurrClients.AdminsClients)
 }

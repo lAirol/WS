@@ -72,7 +72,7 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defaultClient := &users.UserClient{Client: &users.Client{ID: random.GenerateUUID(), Conn: ws, Type: false}}
+	defaultClient := &users.UserClient{Client: &users.Client{ID: random.GenerateUUID(), Conn: ws, Type: false, Ip: r.RemoteAddr}}
 	mu.Lock()
 	users.CurrClients.UsersClients[ws] = defaultClient
 	mu.Unlock()
@@ -105,7 +105,7 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 
 func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 	// тут должны быть проверка на то, залогинен пользователь или нет
-	admin := users.GetLoggedUser(r)
+	admin := users.GetCurrUser(r)
 	if admin == nil {
 		return
 	}

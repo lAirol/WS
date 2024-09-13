@@ -16,7 +16,7 @@ func HandleIndex(w http.ResponseWriter, r *http.Request) {
 func HandleAdminLogin(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	if r.Method == http.MethodGet {
-		if users.GetLoggedUser(r) != nil {
+		if users.GetCurrUser(r) != nil {
 			login.LoadAdminPanel(w, r)
 		} else {
 			login.Load(w, r, data)
