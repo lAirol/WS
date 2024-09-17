@@ -12,11 +12,12 @@ type IClient interface {
 }
 
 type Client struct {
-	ID   string
-	Conn *websocket.Conn
-	Mu   sync.Mutex
-	Type bool //false - юзер true - человечина с доступом к админке
-	Ip   string
+	ID         string
+	Conn       *websocket.Conn
+	ClosedConn bool
+	Mu         sync.Mutex
+	Type       bool //false - юзер true - человечина с доступом к админке
+	Ip         string
 }
 
 type UserClient struct {
@@ -50,7 +51,7 @@ var CurrClients = Clients{
 func GetCurrUser(r *http.Request) *AdminClient {
 	Uid := cookie.GetIdCookie(r)
 	uAgent := cookie.GetUserAgentCookie(r)
-	if adminExists(Uid) && CurrClients.AdminsClients[Uid].UserAgent == uAgent || uAgent != "" {
+	if adminExists(Uid) && CurrClients.AdminsClients[Uid].UserAgent == uAgent && uAgent != "" {
 		return CurrClients.AdminsClients[Uid]
 	}
 	return nil

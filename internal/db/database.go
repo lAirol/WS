@@ -3,13 +3,14 @@ package db
 import (
 	tables2 "WS/internal/db/tables"
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
-func InitDB() {
-	connStr := "user=root password=root dbname=test sslmode=disable"
+func InitDB(user, password, dbname string) {
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
 	var err error
 	DB, err = sql.Open("postgres", connStr)
 	if err != nil {
@@ -65,10 +66,10 @@ func GetHashByUser(user string) (string, error) {
 	return password, err
 }
 
-func GetDB() *sql.DB {
-	if DB == nil {
-		// Initialize DB connection only once
-		InitDB()
-	}
-	return DB
-}
+//func GetDB() *sql.DB {
+//	if DB == nil {
+//		// Initialize DB connection only once
+//		InitDB()
+//	}
+//	return DB
+//}

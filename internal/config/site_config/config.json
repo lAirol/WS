@@ -1,0 +1,9 @@
+{
+  "server_port": 8080,
+  "db": {
+    "db_user": "root",
+    "db_password": "root",
+    "db_name": "test",
+    "db_url": ""
+  }
+}

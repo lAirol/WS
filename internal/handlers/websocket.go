@@ -3,9 +3,11 @@ package handlers
 import (
 	"WS/internal/extentions/random"
 	"WS/internal/modules/users"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -108,6 +110,8 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 	admin := users.GetCurrUser(r)
 	if admin == nil {
 		return
+	} else {
+		admin.ClosedConn = false
 	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -122,10 +126,26 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		defer func() {
-			ws.Close()
-			mu.Lock()
-			delete(users.CurrClients.AdminsClients, admin.ID)
-			mu.Unlock()
+			doneCh := make(chan struct{})
+			go func() {
+				// Здесь можно добавить вашу логику для попытки повторного подключения
+				time.Sleep(5 * time.Second) // Пауза в 5 секунд
+				close(doneCh)
+			}()
+
+			select {
+			case <-doneCh:
+				// Если канал закрылся (т.е. попытка повторного подключения завершилась или истекло время ожидания)
+				mu.Lock()
+				defer mu.Unlock()
+				if admin.ClosedConn == true {
+					ws.Close()
+					fmt.Printf("Закрыть ворота навсегда")
+					delete(users.CurrClients.AdminsClients, admin.ID)
+				} else {
+					fmt.Printf("Ворота открылись")
+				}
+			}
 		}()
 		for {
 			_, msg, err := ws.ReadMessage()
@@ -134,6 +154,7 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 					log.Printf("unexpected close error: %v", err)
 				} else {
 					log.Printf("connection closed: %v", err)
+					admin.ClosedConn = true
 				}
 				break
 			}

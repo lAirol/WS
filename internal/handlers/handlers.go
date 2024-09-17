@@ -10,7 +10,7 @@ import (
 )
 
 func HandleIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./internal/view/index.html")
+	http.ServeFile(w, r, "./internal/views/index.html")
 }
 
 func HandleAdminLogin(w http.ResponseWriter, r *http.Request) {
