@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"time"
 )
 
 type SiteConstants struct {
-	AdminTimeoutSeconds int    `json:"AdminTimeoutSeconds"`
-	ItemsPerPage        int    `json:"items_per_page"`
-	PrimaryColor        string `json:"primary_color"`
-	SecondaryColor      string `json:"secondary_color"`
+	AdminTimeoutSeconds time.Duration `json:"admin_timeout_seconds"`
+	ItemsPerPage        int           `json:"items_per_page"`
+	PrimaryColor        string        `json:"primary_color"`
+	SecondaryColor      string        `json:"secondary_color"`
+	SystemWatchInterval time.Duration `json:"system_watch_interval"`
 }
 
 var Constants *SiteConstants

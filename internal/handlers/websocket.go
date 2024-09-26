@@ -1,25 +1,25 @@
 package handlers
 
 import (
+	"WS/internal/config/constants"
 	"WS/internal/extentions/random"
 	"WS/internal/modules/users"
-	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"sync"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 type Sender struct {
 	users.IClient
-	msg []byte
+	Msg    []byte
+	Server bool
 }
 
 var (
 	upgrader  websocket.Upgrader
-	broadcast = make(chan Sender)
+	Broadcast = make(chan Sender)
 	mu        sync.Mutex
 )
 
@@ -33,13 +33,13 @@ func init() {
 
 func broadcastMessages() {
 	for {
-		sender := <-broadcast
+		sender := <-Broadcast
 		mu.Lock()
-		if !sender.IClient.GetType() {
+		if sender.Server == true || !sender.IClient.GetType() {
 			for _, userClient := range users.CurrClients.UsersClients {
 				userClient.Mu.Lock()
 				if userClient.Conn != nil && userClient != sender.IClient {
-					err := userClient.Conn.WriteMessage(websocket.TextMessage, sender.msg)
+					err := userClient.Conn.WriteMessage(websocket.TextMessage, sender.Msg)
 					if err != nil {
 						log.Printf("error sending message: %v", err)
 						userClient.Conn.Close()
@@ -48,11 +48,11 @@ func broadcastMessages() {
 				}
 				userClient.Mu.Unlock()
 			}
-		} else {
+		} else if sender.Server == true || sender.IClient.GetType() {
 			for _, adminClient := range users.CurrClients.AdminsClients {
 				adminClient.Mu.Lock()
 				if adminClient.Conn != nil && adminClient != sender.IClient {
-					err := adminClient.Conn.WriteMessage(websocket.TextMessage, sender.msg)
+					err := adminClient.Conn.WriteMessage(websocket.TextMessage, sender.Msg)
 					if err != nil {
 						log.Printf("error sending message: %v", err)
 						adminClient.Conn.Close()
@@ -92,15 +92,15 @@ func HandleConnections(w http.ResponseWriter, r *http.Request) {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 					log.Printf("unexpected close error: %v", err)
 				} else {
-					log.Printf("connection closed: %v", err)
+					log.Printf("index page connection closed: %v", err)
 				}
 				break
 			}
 			s := Sender{
 				IClient: defaultClient,
-				msg:     msg,
+				Msg:     msg,
 			}
-			broadcast <- s
+			Broadcast <- s
 		}
 	}()
 }
@@ -111,7 +111,10 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 	if admin == nil {
 		return
 	} else {
-		admin.ClosedConn = false
+		if admin.Timer != nil {
+			admin.Timer.Stop()
+			admin.Timer = nil
+		}
 	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -121,32 +124,8 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 
 	admin.Mu = mu
 	admin.Conn = ws
-	mu.Lock()
-	mu.Unlock()
 
 	go func() {
-		defer func() {
-			doneCh := make(chan struct{})
-			go func() {
-				// Здесь можно добавить вашу логику для попытки повторного подключения
-				time.Sleep(5 * time.Second) // Пауза в 5 секунд
-				close(doneCh)
-			}()
-
-			select {
-			case <-doneCh:
-				// Если канал закрылся (т.е. попытка повторного подключения завершилась или истекло время ожидания)
-				mu.Lock()
-				defer mu.Unlock()
-				if admin.ClosedConn == true {
-					ws.Close()
-					fmt.Printf("Закрыть ворота навсегда")
-					delete(users.CurrClients.AdminsClients, admin.ID)
-				} else {
-					fmt.Printf("Ворота открылись")
-				}
-			}
-		}()
 		for {
 			_, msg, err := ws.ReadMessage()
 			if err != nil {
@@ -154,15 +133,25 @@ func HandleAdminConnections(w http.ResponseWriter, r *http.Request) {
 					log.Printf("unexpected close error: %v", err)
 				} else {
 					log.Printf("connection closed: %v", err)
-					admin.ClosedConn = true
+					crateCloseChannel(admin)
 				}
 				break
 			}
 			s := Sender{
 				IClient: users.CurrClients.AdminsClients[admin.ID],
-				msg:     msg,
+				Msg:     msg,
 			}
-			broadcast <- s
+			Broadcast <- s
 		}
 	}()
+}
+
+func crateCloseChannel(admin *users.AdminClient) {
+	admin.Timer = time.AfterFunc(constants.Constants.AdminTimeoutSeconds*time.Second, func() {
+		log.Printf("Удаление Юзера")
+		if admin.Conn != nil {
+			admin.Conn.Close()
+		}
+		delete(users.CurrClients.AdminsClients, admin.ID)
+	})
 }

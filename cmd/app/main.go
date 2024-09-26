@@ -4,10 +4,12 @@ import (
 	"WS/internal/config/constants"
 	"WS/internal/config/site_config"
 	"WS/internal/db"
+	"WS/internal/extentions/system"
 	"WS/internal/route"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -28,6 +30,8 @@ func main() {
 	db.InitDB(SD.Username, SD.Password, SD.DBName)
 	// Маршрутизация
 	route.InitRoute()
+	//Мониторинг
+	go system.InitSystemWatch(constants.Constants.SystemWatchInterval * time.Second)
 
 	fmt.Println("Сервер запущен на http://localhost:8080/")
 	er := http.ListenAndServe(":8080", nil)

@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/websocket"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type IClient interface {
@@ -12,12 +13,11 @@ type IClient interface {
 }
 
 type Client struct {
-	ID         string
-	Conn       *websocket.Conn
-	ClosedConn bool
-	Mu         sync.Mutex
-	Type       bool //false - юзер true - человечина с доступом к админке
-	Ip         string
+	ID   string
+	Conn *websocket.Conn
+	Mu   sync.Mutex
+	Type bool //false - юзер true - человечина с доступом к админке
+	Ip   string
 }
 
 type UserClient struct {
@@ -32,6 +32,7 @@ type AdminClient struct {
 	*Client
 	someAdminFieldsLikeRules string
 	UserAgent                string
+	Timer                    *time.Timer `json:"timer"`
 }
 
 func (a *AdminClient) GetType() bool {
