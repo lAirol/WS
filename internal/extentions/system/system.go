@@ -1,10 +1,14 @@
 package system
 
 import (
-	"WS/internal/handlers"
+	"WS/internal/config/constants"
+	"WS/internal/modules/response"
+	"WS/internal/modules/users"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
+	"net/http"
 	"os/exec"
 	"time"
 )
@@ -12,6 +16,12 @@ import (
 var SystemInfo SysInfo
 
 type SysInfo struct {
+	Sys
+	UpdateTime time.Duration
+}
+
+type Sys struct {
+	AdditionalInfo
 	Sysstat struct {
 		Hosts []struct {
 			Nodename     string `json:"nodename"`
@@ -40,6 +50,11 @@ type SysInfo struct {
 	} `json:"sysstat"`
 }
 
+type AdditionalInfo struct {
+	Target int    `json:"target"`
+	Type   string `json:"type"`
+}
+
 type SignedConn struct {
 	//SignedUsers
 }
@@ -49,23 +64,74 @@ type SignedConn struct {
 //}
 
 func InitSystemWatch(interval time.Duration) {
-	SystemInfo.start(interval) // тут реализовать отправку пользователям данных
+	SystemInfo.UpdateTime = interval
+	SystemInfo.start() // тут реализовать отправку пользователям данных
 }
 
-func (si *SysInfo) start(interval time.Duration) {
+func (si *SysInfo) start() {
 	for {
-		cmd := exec.Command("mpstat", "-P", "ALL", "-o", "JSON")
+		cmd := exec.Command("mpstat", "-P", "ALL", "-o", "JSON", "1", "1")
 		output, err := cmd.Output()
-		json.Unmarshal(output, si)
-		fmt.Println(si.Sysstat.Hosts[0].Statistics[0])
-		if err != nil {
-			log.Println("Ошибка монитринга: ", err)
-		}
-		time.Sleep(interval)
-		sender := handlers.Sender{
-			Server: true,
-			Msg:    output,
-		}
-		handlers.Broadcast <- sender
+		json.Unmarshal(output, &si.Sys)
+		go func() {
+			if len(users.CurrClients.AdminsClients) > 0 {
+				si.Sys.Target = constants.Constants.WsConst.SysInfo
+				si.Type = "CPU"
+				output, _ = json.Marshal(si.Sys)
+				if err != nil {
+					log.Println("Ошибка монитринга: ", err)
+				}
+				si.SendMessageAll(output)
+			}
+		}()
+		//time.Sleep(si.UpdateTime)
 	}
+}
+
+func (si *SysInfo) SendMessageAll(output []byte) {
+	for _, client := range users.CurrClients.AdminsClients {
+		si.SendMessage(client, output) // добавить go если надо
+	}
+}
+
+func (si *SysInfo) SendMessage(client *users.AdminClient, message []byte) {
+	if client.Conn != nil {
+		client.Mu.Lock()
+		defer client.Mu.Unlock()
+		err := client.Conn.WriteMessage(websocket.TextMessage, message)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+}
+
+func GetCpuCount(w http.ResponseWriter, r *http.Request) {
+	response.JSONResponse(w, SystemInfo.Sysstat.Hosts[0].NumberOfCpus)
+}
+
+func GetNodeName(w http.ResponseWriter, r *http.Request) {
+	response.JSONResponse(w, SystemInfo.Sysstat.Hosts[0].Nodename)
+}
+
+func GetSysName(w http.ResponseWriter, r *http.Request) {
+	response.JSONResponse(w, SystemInfo.Sysstat.Hosts[0].Sysname)
+}
+
+func GetCpuInfo(w http.ResponseWriter, r *http.Request) {
+	var requestData struct {
+		Number int `json:"number"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	// Access the CPU load based on the parsed number
+	cpuLoad := SystemInfo.Sysstat.Hosts[0].Statistics[0].CpuLoad[requestData.Number+1]
+	response.JSONResponse(w, cpuLoad)
+}
+
+func GetSystemInfo(w http.ResponseWriter, r *http.Request) {
+	response.JSONResponse(w, SystemInfo)
 }

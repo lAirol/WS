@@ -1,5 +1,7 @@
+let sysInfo;
 window.onload = ()=>{
-    menuExpand()
+    menuExpand();
+    sysInfo = new SysInfo();
 }
 
 function toggleSidebar(){
@@ -48,13 +50,16 @@ socket.onmessage = (event) => {
         data = JSON.parse(data);
     } catch (ex) {}
     switch (data.target){
-        case "chat":{
+        case wsConst.chat:{
             try{
                 addMessage(data.message,false)
             }catch (e) {
                 console.log(e);
             }
-        }
+        }break;
+        case wsConst.sys_info:{
+            sysInfo.prepareInfo(data);
+        }break;
     }
 };
 
@@ -65,7 +70,13 @@ window.addEventListener("load", () => {
 function sendMessage(message,target) {
     message = {
         message:message,
-        target: target
+        target: wsConst.chat
     }
     socket.send(JSON.stringify(message));
+}
+
+const wsConst =  {
+        "points": 1,
+        "chat": 2,
+        "sys_info": 3
 }

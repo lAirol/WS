@@ -20,7 +20,7 @@ func NewAdminUsersController(w http.ResponseWriter, r *http.Request, admin *Admi
 }
 
 func (ac *AdminUsersController) CreateJSONResponse(data interface{}) {
-	response.NewJSONResponse(ac.Writer, response.CreateResponse(data))
+	response.JSONResponse(ac.Writer, data)
 }
 
 func (ac *AdminUsersController) GetUsers() {

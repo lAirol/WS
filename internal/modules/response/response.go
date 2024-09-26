@@ -24,7 +24,13 @@ func CreateErrResponse(w http.ResponseWriter, status int, err error) {
 	w.Write([]byte(`{"status": "` + string(rune(status)) + `", "message": "` + err.Error() + `"}`))
 }
 
+func JSONResponse(w http.ResponseWriter, data interface{}) {
+	response := CreateResponse(data)
+	NewJSONResponse(w, response)
+}
+
 func NewJSONResponse(w http.ResponseWriter, response *Response) {
+
 	jsonData, err := json.Marshal(response)
 	if err != nil {
 		CreateErrResponse(w, http.StatusInternalServerError, err)

@@ -11,6 +11,10 @@
 @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none){
     .ps{overflow:auto!important;}
 }
+.be-wrapper {
+    min-height: 100%;
+    padding-top: 61px;
+}
 /*! CSS Used from: https://foxythemes.net/preview/products/beagle/assets/lib/material-design-icons/css/material-design-iconic-font.min.css */
 .mdi{display:inline-block;font:normal normal normal 14px/1 'Material Icons';font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
 .mdi-power:before{content:'\f1af';}

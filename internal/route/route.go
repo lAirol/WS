@@ -1,6 +1,7 @@
 package route
 
 import (
+	"WS/internal/extentions/system"
 	"WS/internal/handlers"
 	"WS/internal/modules/admin"
 	"WS/internal/modules/news"
@@ -14,6 +15,7 @@ func InitRoute() {
 	news.RegisterRoutes()
 	admin.RegisterRoutes()
 	users.RegisterRoutes()
+	system.RegisterRoutes()
 	reqType()
 }
 

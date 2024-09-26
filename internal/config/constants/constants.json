@@ -2,7 +2,6 @@
   "system_watch_interval": 1,
 
 
-
   "admin_timeout_seconds": 5,
 
 
@@ -15,5 +14,11 @@
 
 
   "primary_color": "#FFFFFF",
-  "secondary_color": "#000000"
+  "secondary_color": "#000000",
+
+  "ws_const": {
+    "points": 1,
+    "chat": 2,
+    "sys_info": 3
+  }
 }

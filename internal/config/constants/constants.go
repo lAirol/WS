@@ -8,11 +8,16 @@ import (
 )
 
 type SiteConstants struct {
+	SystemWatchInterval time.Duration `json:"system_watch_interval"`
 	AdminTimeoutSeconds time.Duration `json:"admin_timeout_seconds"`
 	ItemsPerPage        int           `json:"items_per_page"`
 	PrimaryColor        string        `json:"primary_color"`
 	SecondaryColor      string        `json:"secondary_color"`
-	SystemWatchInterval time.Duration `json:"system_watch_interval"`
+	WsConst             struct {
+		Points  int `json:"points"`
+		Chat    int `json:"chat"`
+		SysInfo int `json:"sys_info"`
+	} `json:"ws_const"`
 }
 
 var Constants *SiteConstants
