@@ -28,7 +28,7 @@
 }
 
 
-#cpu_charts {
+#cpu_charts, #cpu_bars {
     display: flex;
     flex-wrap: wrap;
 }
@@ -36,4 +36,13 @@
 .chart_div {
     width: calc(100%/4); /* 25% для 4 графиков в строке, 16.67% для 6 */
     height: 150px; /* Примерная высота графика */
+}
+
+.bar_div {
+    margin: 20px;
+    width: 200px;
+    height: 100px;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
 }

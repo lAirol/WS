@@ -1,10 +1,11 @@
 class SysInfo {
     info = []
-    cpu_charts = []
     cpu_count
     time = 30//кол-во данных которое мы храним
     append_data = false
     time_labels_arr = []
+    CpuCharts
+    CpuBars
 
 
     constructor() {
@@ -14,7 +15,8 @@ class SysInfo {
         }
         this.postData("/system/GetCpuCount").then((response) => {
             this.cpu_count = response.data;
-            this.createCharts();
+            this.CpuCharts = new CpuCharts(this);
+            this.CpuBars = new CpuBars(this);
             this.append_data = true;
         });
     }
@@ -22,56 +24,41 @@ class SysInfo {
     prepareInfo(data){
         switch (data.type) {
             case "CPU":{
-                sysInfo.addInfo(data.sysstat.hosts[0]);
+                this.addInfo(data.sysstat.hosts[0]);
             }break;
         }
     }
 
-    createCharts(){
-        let cpu_charts = document.getElementById("cpu_charts");
-        for (let i = 0; i<this.cpu_count; i++){
-            let div = document.createElement("div");
-            div.className = "chart_div";
-            let canvas = document.createElement("canvas");
-            canvas.id = "cpu_chart_"+i;
-            div.append(canvas);
-            cpu_charts.append(div);
-            this.createNewCPUChart(canvas, i+1);
-        }
-    }
-
-    createNewCPUChart(ctx,number){
-        let chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: this.time_labels_arr,
-                datasets: [{
-                    label: 'CPU №' + number,
-                    data: new Array(this.time).fill(0),
-                    borderWidth: 1,
-                    backgroundColor: this.getRandomColor(),
-                }]
+    createNewCPUBar(){
+        let bar_div = document.createElement("div");
+        let bar = new ProgressBar.SemiCircle(bar_div, {
+            strokeWidth: 6,
+            color: '#FFEA82',
+            trailColor: '#eee',
+            trailWidth: 1,
+            easing: 'easeInOut',
+            duration: 1400,
+            svgStyle: null,
+            text: {
+                value: '',
+                alignToBottom: false
             },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top' // Move the legend to the bottom of the chart
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff'
-                    }
+            from: {color: '#FFEA82'},
+            to: {color: '#ED6A5A'},
+            // Set default step function for all animate calls
+            step: (state, bar) => {
+                bar.path.setAttribute('stroke', state.color);
+                var value = Math.round(bar.value() * 100);
+                if (value === 0) {
+                    bar.setText('');
+                } else {
+                    bar.setText(value);
                 }
+
+                bar.text.style.color = state.color;
             }
         });
-        this.cpu_charts.push(chart);
+
     }
 
     getRandomColor() {
@@ -89,26 +76,15 @@ class SysInfo {
             try{
                 (this.info.length>this.time) ? this.info.shift() : null;
                 this.info.push(info)
-                this.update_chart(info);
-
+                this.CpuCharts.updateChart(info);
+                this.CpuBars.updateBars(info);
             }catch (e) {
                 console.log("addInfo failed")
             }
         }
     }
 
-    update_chart(info){
-        let statistic = info.statistics[0]["cpu-load"];
-        statistic.forEach((value, key)=>{
-            if(key != 0){
-                let cpuLoad = value.usr;
-                let latestDataset = this.cpu_charts[key-1].data.datasets[0];
-                (latestDataset.data.length>=this.time)? latestDataset.data.shift() : null;
-                latestDataset.data.push(cpuLoad);
-                this.cpu_charts[key-1].update();
-            }
-        })
-    }
+
 
     async postData(url = "", data = {}){
         const response = await fetch(url, {

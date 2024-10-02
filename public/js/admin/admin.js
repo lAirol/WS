@@ -58,7 +58,8 @@ socket.onmessage = (event) => {
             }
         }break;
         case wsConst.sys_info:{
-            sysInfo.prepareInfo(data);
+            if(sysInfo!==undefined)
+                sysInfo.prepareInfo(data);
         }break;
     }
 };

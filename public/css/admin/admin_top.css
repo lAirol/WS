@@ -86,7 +86,9 @@ a:focus,a:hover{text-decoration:none;}
 }
 .be-top-header .container-fluid{padding:0;}
 .be-top-header .be-navbar-header{display:-webkit-box;display:-ms-flexbox;display:flex;width:230px;-webkit-box-flex:0;-ms-flex:0 0 230px;flex:0 0 230px;}
-.be-top-header .be-navbar-header .navbar-brand{line-height:60px;height:60px;width:142px;background-image:url(/images/admin/logo.png);background-repeat:no-repeat;background-position:20px center;padding:0 20px;margin:0;display:block;}
+.be-top-header .be-navbar-header .navbar-brand{line-height:60px;height:60px;width:142px;
+    /*background-image:url(/images/admin/logo.jpeg);*/
+    background-repeat:no-repeat;background-position:20px center;padding:0 20px;margin:0;display:block;}
 @media (-webkit-min-device-pixel-ratio:2),(min-resolution:192dpi){
     .be-top-header .be-navbar-header .navbar-brand{background-image:url(/images/admin/logo-xx.png);background-size:102px 27px;}
 }
