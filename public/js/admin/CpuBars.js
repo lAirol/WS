@@ -12,7 +12,7 @@ class CpuBars {
         for (let i = 0; i<this.sysInfo.cpu_count; i++){
             let div = document.createElement("div");
             let span = document.createElement("span");
-            span.innerText = "CPU №"+i;
+            span.innerText = "CPU №"+i+1;
             div.className = "bar_div";
             div.append(span)
             cpu_bars.append(div);
