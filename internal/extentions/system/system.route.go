@@ -10,4 +10,5 @@ func RegisterRoutes() {
 	http.HandleFunc("/system/GetSysName", GetSysName)
 	http.HandleFunc("/system/GetCpuInfo", GetCpuInfo)
 	http.HandleFunc("/system/GetSystemInfo", GetSystemInfo)
+	http.HandleFunc("/system/GetNetInterfacesParams", GetNetInterfacesParams)
 }

@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"golang.org/x/sys/unix"
 	"log"
 	"net/http"
 	"os/exec"
+	"runtime"
 	"time"
 )
 
@@ -65,7 +67,9 @@ type SignedConn struct {
 
 func InitSystemWatch(interval time.Duration) {
 	SystemInfo.UpdateTime = interval
-	SystemInfo.start() // тут реализовать отправку пользователям данных
+	go SystemInfo.start() // тут реализовать отправку пользователям данных
+	go SystemInfo.StartNetwork()
+	go SystemInfo.GetMemInfo()
 }
 
 func (si *SysInfo) start() {
@@ -134,4 +138,33 @@ func GetCpuInfo(w http.ResponseWriter, r *http.Request) {
 
 func GetSystemInfo(w http.ResponseWriter, r *http.Request) {
 	response.JSONResponse(w, SystemInfo)
+}
+
+type StaticInfo struct {
+	TotalRAM   uint64 `json:"total_ram"`
+	GoRoutines int    `json:"go_routines"`
+	SharedRAM  uint64 `json:"shared_ram"`
+	BufferRAM  uint64 `json:"buffer_ram"`
+	TotalHigh  uint64 `json:"total_high"`
+	MemTotal   uint64 `json:"mem_total"`
+	SwapTotal  uint64 `json:"swap_total"`
+}
+
+func (si *SysInfo) GetStaticInfo() {
+	statInfo := &StaticInfo{}
+	var info unix.Sysinfo_t
+	err := unix.Sysinfo(&info)
+	if err != nil {
+		fmt.Printf("Ошибка получения информации: %v\n", err)
+		return
+	}
+
+	statInfo.TotalRAM = info.Totalram * uint64(info.Unit)
+	statInfo.GoRoutines = runtime.NumGoroutine()
+	statInfo.SharedRAM = info.Sharedram * uint64(info.Unit)
+	statInfo.BufferRAM = info.Bufferram * uint64(info.Unit)
+	statInfo.TotalHigh = info.Totalhigh * uint64(info.Unit)
+	statInfo.MemTotal = info.Totalram * uint64(info.Unit)
+	statInfo.SwapTotal = info.Totalswap * uint64(info.Unit)
+	fmt.Println(statInfo)
 }

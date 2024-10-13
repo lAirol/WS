@@ -1,11 +1,14 @@
 class SysInfo {
     info = []
     cpu_count
+    net_count
     time = 30//кол-во данных которое мы храним
     append_data = false
     time_labels_arr = []
     CpuCharts
     CpuBars
+    NetBars
+    NetCharts
 
 
     constructor() {
@@ -19,6 +22,11 @@ class SysInfo {
             this.CpuBars = new CpuBars(this);
             this.append_data = true;
         });
+        this.postData("/system/GetNetInterfacesParams").then((response) =>{
+            this.net_count = response.data.count;
+            this.NetCharts = new NetCharts(this, response.data);
+            this.NetBars = new NetBars(this,response.data);
+        })
     }
 
     prepareInfo(data){
@@ -26,39 +34,10 @@ class SysInfo {
             case "CPU":{
                 this.addInfo(data.sysstat.hosts[0]);
             }break;
-        }
-    }
-
-    createNewCPUBar(){
-        let bar_div = document.createElement("div");
-        let bar = new ProgressBar.SemiCircle(bar_div, {
-            strokeWidth: 6,
-            color: '#FFEA82',
-            trailColor: '#eee',
-            trailWidth: 1,
-            easing: 'easeInOut',
-            duration: 1400,
-            svgStyle: null,
-            text: {
-                value: '',
-                alignToBottom: false
-            },
-            from: {color: '#FFEA82'},
-            to: {color: '#ED6A5A'},
-            // Set default step function for all animate calls
-            step: (state, bar) => {
-                bar.path.setAttribute('stroke', state.color);
-                var value = Math.round(bar.value() * 100);
-                if (value === 0) {
-                    bar.setText('');
-                } else {
-                    bar.setText(value);
-                }
-
-                bar.text.style.color = state.color;
+            case "INTERNET":{ // TODO тут кончно было бы лучше дописать отдельный прикол в addinfo
+                this.addInternetInfo(data.info);
             }
-        });
-
+        }
     }
 
     getRandomColor() {
@@ -84,6 +63,12 @@ class SysInfo {
         }
     }
 
+    addInternetInfo(info){
+        try{
+            this.NetBars.updateBars(info);
+            this.NetCharts.updateCharts(info);
+        }catch (e){}
+    }
 
 
     async postData(url = "", data = {}){

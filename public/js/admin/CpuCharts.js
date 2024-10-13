@@ -27,7 +27,7 @@ class CpuCharts{
                 labels: this.sysInfo.time_labels_arr,
                 datasets: [{
                     label: 'CPU №' + number,
-                    data: new Array(this.sysInfo.time).fill(0),
+                    data: new Array(this.sysInfo.time).fill(null),
                     borderWidth: 1,
                     backgroundColor: this.sysInfo.getRandomColor(),
                 }]

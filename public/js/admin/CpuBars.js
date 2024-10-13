@@ -25,7 +25,7 @@ class CpuBars {
     createNewCPUBar(bar_div){
         return new ProgressBar.SemiCircle(bar_div, {
             strokeWidth: 6,
-            color: '#FFEA82',
+            color: '#ffd700',
             trailColor: '#eee',
             trailWidth: 1,
             easing: 'easeInOut',
